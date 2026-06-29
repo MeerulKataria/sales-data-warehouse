@@ -5,17 +5,23 @@ def load_dim_date(cursor):
 
     print("Loading Date Dimension...")
 
-    # Create table
+    # ==============================
+    # Create Date Dimension Table
+    # ==============================
     with open("sql/ddl/create_dim_date.sql", "r") as file:
         cursor.execute(file.read())
 
+    # ==============================
     # Read staging data
+    # ==============================
     df = pd.read_csv(
         "data/processed/stg_orders.csv",
         parse_dates=["order_date"]
     )
 
-    # Build date dimension
+    # ==============================
+    # Build Date Dimension
+    # ==============================
     date_df = pd.DataFrame()
 
     date_df["full_date"] = df["order_date"].drop_duplicates()
@@ -30,7 +36,25 @@ def load_dim_date(cursor):
     date_df["year"] = date_df["full_date"].dt.year
     date_df["weekday"] = date_df["full_date"].dt.day_name()
 
-    # Insert rows
+    # ==============================
+    # Reorder columns to match SQL
+    # ==============================
+    date_df = date_df[
+        [
+            "date_key",
+            "full_date",
+            "day",
+            "month",
+            "month_name",
+            "quarter",
+            "year",
+            "weekday"
+        ]
+    ]
+
+    # ==============================
+    # Insert into dim_date
+    # ==============================
     for _, row in date_df.iterrows():
 
         cursor.execute("""

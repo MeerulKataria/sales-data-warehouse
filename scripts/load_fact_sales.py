@@ -10,7 +10,6 @@ def load_fact_sales(cursor):
     cursor.execute("""
         INSERT INTO fact_sales
         (
-            order_id,
             customer_key,
             product_key,
             date_key,
@@ -21,8 +20,6 @@ def load_fact_sales(cursor):
         )
 
         SELECT
-
-            s.order_id,
 
             c.customer_key,
 
@@ -47,7 +44,7 @@ def load_fact_sales(cursor):
             ON s.product_id = p.product_id
 
         JOIN dim_date d
-            ON s.order_date = d.order_date;
+            ON s.order_date = d.full_date;
     """)
 
-    print("✅ Fact Sales loaded.")
+    print("✅ Fact Sales loaded successfully!")

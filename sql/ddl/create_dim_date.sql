@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS dim_date CASCADE;
+
 CREATE TABLE dim_date (
 
     date_key INT PRIMARY KEY,

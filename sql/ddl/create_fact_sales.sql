@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS fact_sales CASCADE;
+
 CREATE TABLE fact_sales (
 
     sale_key SERIAL PRIMARY KEY,
