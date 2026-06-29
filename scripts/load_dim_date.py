@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 def load_dim_date(cursor):
 
     print("Loading Date Dimension...")
@@ -6,25 +9,46 @@ def load_dim_date(cursor):
     with open("sql/ddl/create_dim_date.sql", "r") as file:
         cursor.execute(file.read())
 
-    # Insert data
-    cursor.execute("""
-        INSERT INTO dim_date
-        (
-            order_date,
-            year,
-            quarter,
-            month,
-            month_name,
-            day
-        )
-        SELECT DISTINCT
-            order_date,
-            EXTRACT(YEAR FROM order_date),
-            EXTRACT(QUARTER FROM order_date),
-            EXTRACT(MONTH FROM order_date),
-            TO_CHAR(order_date, 'Month'),
-            EXTRACT(DAY FROM order_date)
-        FROM stg_orders;
-    """)
+    # Read staging data
+    df = pd.read_csv(
+        "data/processed/stg_orders.csv",
+        parse_dates=["order_date"]
+    )
 
-    print("✅ Date Dimension loaded.")
+    # Build date dimension
+    date_df = pd.DataFrame()
+
+    date_df["full_date"] = df["order_date"].drop_duplicates()
+
+    date_df = date_df.sort_values("full_date")
+
+    date_df["date_key"] = date_df["full_date"].dt.strftime("%Y%m%d").astype(int)
+    date_df["day"] = date_df["full_date"].dt.day
+    date_df["month"] = date_df["full_date"].dt.month
+    date_df["month_name"] = date_df["full_date"].dt.month_name()
+    date_df["quarter"] = date_df["full_date"].dt.quarter
+    date_df["year"] = date_df["full_date"].dt.year
+    date_df["weekday"] = date_df["full_date"].dt.day_name()
+
+    # Insert rows
+    for _, row in date_df.iterrows():
+
+        cursor.execute("""
+            INSERT INTO dim_date
+            (
+                date_key,
+                full_date,
+                day,
+                month,
+                month_name,
+                quarter,
+                year,
+                weekday
+            )
+            VALUES
+            (
+                %s,%s,%s,%s,%s,%s,%s,%s
+            )
+        """, tuple(row))
+
+    print("✅ Date Dimension loaded successfully!")
