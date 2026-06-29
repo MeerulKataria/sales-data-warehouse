@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from load_stage import load_stage
 from load_dim_customer import load_dim_customer
+from load_dim_product import load_dim_product
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
             host="localhost",
             database="sales_dw",
             user="postgres",
-            password="meerul1234",   # Replace with your password
+            password="meerul1234",
             port="5432"
         )
 
@@ -41,7 +42,13 @@ def main():
         load_dim_customer(cursor)
         conn.commit()
 
-        print("\n🎉 Customer Dimension ETL Completed Successfully!")
+        # -------------------------
+        # Load Product Dimension
+        # -------------------------
+        load_dim_product(cursor)
+        conn.commit()
+
+        print("\n🎉 Customer & Product Dimension ETL Completed Successfully!")
 
         # Close connection
         cursor.close()

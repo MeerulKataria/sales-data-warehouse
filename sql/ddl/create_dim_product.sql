@@ -6,10 +6,10 @@ CREATE TABLE dim_product (
 
     product_id VARCHAR(20) UNIQUE,
 
+    product_name VARCHAR(255),
+
     category VARCHAR(50),
 
-    sub_category VARCHAR(50),
-
-    product_name VARCHAR(200)
+    sub_category VARCHAR(50)
 
 );
