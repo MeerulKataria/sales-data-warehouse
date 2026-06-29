@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS dim_customer CASCADE;
+
 CREATE TABLE dim_customer (
 
     customer_key SERIAL PRIMARY KEY,
@@ -6,12 +8,6 @@ CREATE TABLE dim_customer (
 
     customer_name VARCHAR(100) NOT NULL,
 
-    segment VARCHAR(50),
-
-    city VARCHAR(50),
-
-    state VARCHAR(50),
-
-    region VARCHAR(50)
+    segment VARCHAR(50) NOT NULL
 
 );

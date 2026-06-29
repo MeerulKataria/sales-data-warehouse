@@ -1,80 +1,58 @@
-import pandas as pd
+import os
+import sys
 import psycopg2
 
-try:
-    # Connect to PostgreSQL
-    conn = psycopg2.connect(
-        host="localhost",
-        database="sales_dw",
-        user="postgres",
-        password="meerul1234",
-        port="5432"
-    )
+# Allow importing modules from the scripts folder
+sys.path.append(os.path.dirname(__file__))
 
-    print("✅ Connected to PostgreSQL successfully!")
+from load_stage import load_stage
+from load_dim_customer import load_dim_customer
 
-    # Read cleaned dataset
-    df = pd.read_csv(
-        "data/processed/stg_orders.csv",
-        parse_dates=["order_date", "ship_date"]
-    )
 
-    print(df.head())
-    print(df.shape)
+def main():
 
-    # Create cursor
-    cursor = conn.cursor()
+    try:
+        print("=" * 60)
+        print(" SALES DATA WAREHOUSE ETL PIPELINE ")
+        print("=" * 60)
 
-    # Read SQL file
-    with open("sql/ddl/create_stg_orders.sql", "r") as file:
-        sql_script = file.read()
+        # Connect to PostgreSQL
+        conn = psycopg2.connect(
+            host="localhost",
+            database="sales_dw",
+            user="postgres",
+            password="meerul1234",   # Replace with your password
+            port="5432"
+        )
 
-    # Execute SQL
-    cursor.execute(sql_script)
-    conn.commit()
+        cursor = conn.cursor()
 
-    print("✅ stg_orders table created successfully!")
+        print("✅ Connected to PostgreSQL\n")
 
-    # Insert data into stg_orders
-    for _, row in df.iterrows():
-        cursor.execute("""
-            INSERT INTO stg_orders (
-                row_id,
-                order_id,
-                order_date,
-                ship_date,
-                ship_mode,
-                customer_id,
-                customer_name,
-                segment,
-                country,
-                city,
-                state,
-                postal_code,
-                region,
-                product_id,
-                category,
-                sub_category,
-                product_name,
-                sales,
-                quantity,
-                discount,
-                profit
-            )
-            VALUES (
-                %s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,%s
-            )
-        """, tuple(row))
+        # -------------------------
+        # Load Stage
+        # -------------------------
+        load_stage(cursor)
+        conn.commit()
 
-    conn.commit()
+        # -------------------------
+        # Load Customer Dimension
+        # -------------------------
+        load_dim_customer(cursor)
+        conn.commit()
 
-    print("✅ All data inserted successfully!")
+        print("\n🎉 Customer Dimension ETL Completed Successfully!")
 
-    cursor.close()
-    conn.close()
+        # Close connection
+        cursor.close()
+        conn.close()
 
-except Exception as e:
-    print(e)
+        print("✅ PostgreSQL connection closed.")
+
+    except Exception as e:
+        print("\n❌ ETL Failed")
+        print(e)
+
+
+if __name__ == "__main__":
+    main()
